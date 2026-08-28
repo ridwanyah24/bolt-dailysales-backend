@@ -20,6 +20,7 @@ import { AiInsightsModule } from './ai-insights/ai-insights.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.registerAsync({
+      global: true,
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_ACCESS_SECRET', 'fallback-access-secret'),
