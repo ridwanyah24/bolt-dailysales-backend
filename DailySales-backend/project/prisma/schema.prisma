@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  SALESPERSON
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+model Business {
+  id               String    @id @default(cuid())
+  name             String
+  storeName        String?
+  address          String?
+  currency         String    @default("NGN")
+  setupCompletedAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  users             User[]
+  categories        Category[]
+  products          Product[]
+  sales             Sale[]
+  notificationReads NotificationRead[]
+  insightCache      AiInsightCache?
+}
+
+model User {
+  id              String     @id @default(cuid())
+  businessId      String
+  business        Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name            String
+  email           String
+  passwordHash    String?
+  role            Role
+  status          UserStatus @default(ACTIVE)
+  avatarUrl       String?
+  emailVerifiedAt DateTime?
+  inviteTokenHash String?
+  inviteExpiresAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  sales          Sale[]
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordResetToken[]
+
+  @@unique([businessId, email])
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model Category {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+
+  products Product[]
+
+  @@unique([businessId, name])
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  businessId        String
+  business          Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  categoryId        String
+  category          Category @relation(fields: [categoryId], references: [id])
+  name              String
+  sku               String?
+  barcode           String?
+  sellingPrice      Decimal  @db.Decimal(12, 2)
+  costPrice         Decimal? @db.Decimal(12, 2)
+  stockQty          Int      @default(0)
+  lowStockThreshold Int      @default(0)
+  imageUrl          String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  saleItems SaleItem[]
+
+  @@index([businessId, isActive])
+  @@index([businessId, barcode])
+  @@unique([businessId, sku])
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  salespersonId String
+  salesperson   User     @relation(fields: [salespersonId], references: [id])
+  subtotal      Decimal  @db.Decimal(12, 2)
+  total         Decimal  @db.Decimal(12, 2)
+  createdAt     DateTime @default(now())
+
+  items SaleItem[]
+
+  @@index([businessId, createdAt])
+  @@index([businessId, salespersonId])
+}
+
+model SaleItem {
+  id          String  @id @default(cuid())
+  saleId      String
+  sale        Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(12, 2)
+  lineTotal   Decimal @db.Decimal(12, 2)
+}
+
+model NotificationRead {
+  id             String   @id @default(cuid())
+  businessId     String
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  notificationId String
+  readAt         DateTime @default(now())
+
+  @@unique([businessId, notificationId])
+}
+
+model AiInsightCache {
+  businessId  String   @id
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  payload     Json
+  generatedAt DateTime @default(now())
+  expiresAt   DateTime
+}
