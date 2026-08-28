@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma.service';
 import { Errors } from '../common/errors';
 import { hashToken, generateToken, generateCode, decimalToNumber } from '../common/utils';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import type { User, Business, Role } from '../common/domain.types';
 
 const BCRYPT_COST = 12;

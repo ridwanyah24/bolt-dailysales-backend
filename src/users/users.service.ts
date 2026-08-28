@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { Errors } from '../common/errors';
 import { hashToken, generateToken, decimalToNumber, startOfDay, endOfDay } from '../common/utils';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import type { Salesperson, SalespersonStatus, SalespersonPerformance, Role } from '../common/domain.types';
 
 const BCRYPT_COST = 12;
