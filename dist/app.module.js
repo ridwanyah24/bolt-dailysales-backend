@@ -32,6 +32,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             jwt_1.JwtModule.registerAsync({
+                global: true,
                 inject: [config_1.ConfigService],
                 useFactory: (config) => ({
                     secret: config.get('JWT_ACCESS_SECRET', 'fallback-access-secret'),
