@@ -19,7 +19,7 @@ export class AiInsightsService {
     // Check cache
     const cached = await this.prisma.aiInsightCache.findUnique({ where: { businessId } });
     if (cached && cached.expiresAt > new Date()) {
-      return cached.payload as AIInsight[];
+      return cached.payload as unknown as AIInsight[];
     }
 
     // Try LLM, fall back to rules-based
@@ -30,7 +30,7 @@ export class AiInsightsService {
       this.logger.warn(`LLM call failed, using rules-based fallback: ${err instanceof Error ? err.message : err}`);
       // If we have stale cache, serve it rather than failing
       if (cached) {
-        return cached.payload as AIInsight[];
+        return cached.payload as unknown as AIInsight[];
       }
       insights = await this.generateRulesBased(businessId);
     }
